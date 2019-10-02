@@ -184,12 +184,6 @@ class Aircraft:
                 self._reload_time += dt
             return
 
-        # Increase the velocity to the maximum value
-        if self._v_abs < Params.Aircraft.LINEAR_SPEED:
-            self._v += self._a * dt
-            self._v_abs = abs(self._v)
-        self._position += self._v * dt
-
         # If the aircraft flew over the edges of the screen,
         # then we direct it in the opposite direction
         if self._position.y > Params.WIN_HEIGHT or \
@@ -198,8 +192,12 @@ class Aircraft:
                 self._position.x < -Params.WIN_WIDTH:
             self.__flight_to_target(self._position * (-1), dt)
 
+        # Increase the velocity to the maximum value
+        if self._v_abs < Params.Aircraft.LINEAR_SPEED:
+            self._v += self._a * dt
+            self._v_abs = abs(self._v)
         # Increase the flight time to the maximum value
-        if self._flight_time < Params.Aircraft.FLIGHT_TIME:
+        elif self._flight_time < Params.Aircraft.FLIGHT_TIME:
             self._flight_time += dt
             # If target init - the aircraft circles around the target
             if self._target is not None:
@@ -208,6 +206,7 @@ class Aircraft:
             # Return to the ship
             self.__flight_to_target(ship_pos, dt, True)
 
+        self._position += self._v * dt
         framework.placeModel(self._model, self._position.x, self._position.y, self._angle)
 
     def keyPressed(self, key):
