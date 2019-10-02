@@ -23,7 +23,7 @@ class Params:
     class Aircraft:
         LINEAR_SPEED = 2.0
         LINEAR_SPEED_MIN = 0.5
-        LINEAR_ACCELERATION = 0.5
+        LINEAR_ACCELERATION = 1
         ANGULAR_SPEED = 2.5
         FLIGHT_TIME = 15.0
         RELOAD_TIME = 3.0
