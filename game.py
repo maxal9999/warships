@@ -12,6 +12,8 @@ import math
 class Params:
     EPSILON = 0.1
     DEGREES_EPS = 0.3
+    WIN_WIDTH = 8.0
+    WIN_HEIGHT = 6.0
 
     class Ship:
         LINEAR_SPEED = 0.5
@@ -23,8 +25,8 @@ class Params:
         LINEAR_SPEED_MIN = 0.5
         LINEAR_ACCELERATION = 0.5
         ANGULAR_SPEED = 2.5
-        FLIGHT_TIME = 3
-        RELOAD_TIME = 3
+        FLIGHT_TIME = 15.0
+        RELOAD_TIME = 3.0
 
 
 # -------------------------------------------------------
@@ -159,27 +161,48 @@ class Aircraft:
             new_vy = self._v.x * sin_angle + self._v.y * cos_angle
             self._v.x, self._v.y = new_vx, new_vy
 
+    def __flight_around_the_target(self, dt):
+        """
+        Flight around the target
+        :param dt: quantum of the time
+        :return:
+        """
+        target_vec = Vector2(self._target.x - self._position.x,
+                             self._target.y - self._position.y)
+        if abs(target_vec) <= self._v_abs / Params.Aircraft.ANGULAR_SPEED:
+            self.__flight_around(dt)
+        else:
+            self.__flight_to_target(self._target, dt)
+
     def update(self, dt, ship_pos):
         if self._model is None:
+            # Wait some time for reloaded aircraft
             if self._reload_time is not None:
                 self._reload_time += dt
             return
 
+        # Increase the velocity to the maximum value
         if self._v_abs < Params.Aircraft.LINEAR_SPEED:
             self._v += self._a * dt
             self._v_abs = abs(self._v)
         self._position += self._v * dt
 
+        # If the aircraft flew over the edges of the screen,
+        # then we direct it in the opposite direction
+        if self._position.y > Params.WIN_HEIGHT or \
+                self._position.y < -Params.WIN_HEIGHT or \
+                self._position.x > Params.WIN_WIDTH or \
+                self._position.x < -Params.WIN_WIDTH:
+            self.__flight_to_target(self._position * (-1), dt)
+
+        # Increase the flight time to the maximum value
         if self._flight_time < Params.Aircraft.FLIGHT_TIME:
             self._flight_time += dt
-        elif self._target is not None:
-            target_vec = Vector2(self._target.x - self._position.x,
-                                 self._target.y - self._position.y)
-            if abs(target_vec) <= self._v_abs / Params.Aircraft.ANGULAR_SPEED:
-                self.__flight_around(dt)
-            else:
-                self.__flight_to_target(self._target, dt)
+            # If target init - the aircraft circles around the target
+            if self._target is not None:
+                self.__flight_around_the_target(dt)
         else:
+            # Return to the ship
             self.__flight_to_target(ship_pos, dt, True)
 
         framework.placeModel(self._model, self._position.x, self._position.y, self._angle)
