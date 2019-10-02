@@ -55,6 +55,10 @@ class Vector2:
     def __mul__(self, coef):
         if isinstance(coef, Vector2):
             return self.x * coef.x + self.y * coef.y
+        elif isinstance(coef, list):
+            new_x = self.x * coef[0][0] - self.y * coef[0][1]
+            new_y = self.x * coef[1][0] + self.y * coef[1][1]
+            return Vector2(new_x, new_y)
         else:
             return Vector2(self.x * coef, self.y * coef)
 
@@ -157,9 +161,8 @@ class Aircraft:
         else:
             cos_angle = math.cos(angle)
             sin_angle = math.sin(angle)
-            new_vx = self._v.x * cos_angle - self._v.y * sin_angle
-            new_vy = self._v.x * sin_angle + self._v.y * cos_angle
-            self._v.x, self._v.y = new_vx, new_vy
+            # Multiplication of a vector by a rotation matrix
+            self._v = self._v * [[cos_angle, sin_angle], [sin_angle, cos_angle]]
 
     def __flight_around_the_target(self, dt):
         """
