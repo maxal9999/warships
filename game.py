@@ -5,8 +5,9 @@ except:
 
 import math
 
+
 # -------------------------------------------------------
-#	game parameters
+#    Game parameters
 # -------------------------------------------------------
 
 class Params:
@@ -31,7 +32,7 @@ class Params:
 
 
 # -------------------------------------------------------
-#	Basic Vector2 class
+#    Basic Vector2 class
 # -------------------------------------------------------
 
 class Vector2:
@@ -75,8 +76,9 @@ class Vector2:
         value = num / denom
         return math.acos(1 if value > 1 else -1 if value < -1 else value)
 
+
 # -------------------------------------------------------
-#	Simple aircraft logic
+#    Simple aircraft logic
 # -------------------------------------------------------
 
 class Aircraft:
@@ -236,8 +238,9 @@ class Aircraft:
     def is_reloaded(self):
         return self._reload_time is not None and self._reload_time < Params.Aircraft.RELOAD_TIME
 
+
 # -------------------------------------------------------
-#	Simple ship logic
+#    Simple ship logic
 # -------------------------------------------------------
 
 class Ship:
@@ -306,8 +309,9 @@ class Ship:
                     aircraft.init(self._position, self._angle)
                     break
 
+
 # -------------------------------------------------------
-#	game public interface
+#    Game public interface
 # -------------------------------------------------------
 
 class Game:
@@ -335,7 +339,7 @@ class Game:
 
 
 # -------------------------------------------------------
-#	finally we can run our game!
+#    Finally we can run our game!
 # -------------------------------------------------------
 
 framework.runGame(Game())
