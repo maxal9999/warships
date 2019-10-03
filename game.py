@@ -21,11 +21,12 @@ class Params:
         AIRCRAFT_COUNT = 5
 
     class Aircraft:
-        LINEAR_SPEED = 2.0
-        LINEAR_SPEED_MIN = 0.5
-        LINEAR_ACCELERATION = 1
         ANGULAR_SPEED = 2.5
+        CORRECT_ANGLE = 1.57
         FLIGHT_TIME = 15.0
+        LINEAR_SPEED = 2.0
+        LINEAR_SPEED_MIN = 0.1
+        LINEAR_ACCELERATION = 1
         RELOAD_TIME = 3.0
 
 
@@ -91,6 +92,8 @@ class Aircraft:
         self._input = None
         # Texture model
         self._model = None
+        # The need to adjust the angle when circling around the target
+        self._need_correct_angle = None
         # Current position
         self._position = None
         # Time for refueling
@@ -117,6 +120,7 @@ class Aircraft:
         }
 
         self._model = framework.createAircraftModel()
+        self._need_correct_angle = None
         self._position = Vector2(position)
         self._target = None
         self._reload_time = None
@@ -158,13 +162,8 @@ class Aircraft:
         angle = target_vec.angle_between(self._v)
         if angle > Params.DEGREES_EPS:
             self.__flight_around(dt)
-        else:
-            cos_angle = math.cos(angle)
-            sin_angle = math.sin(angle)
-            # Multiplication of a vector by a rotation matrix
-            self._v = self._v * [[cos_angle, sin_angle], [sin_angle, cos_angle]]
 
-    def __flight_around_the_target(self, dt):
+    def __flight_around_target(self, dt):
         """
         Flight around the target
         :param dt: quantum of the time
@@ -173,11 +172,14 @@ class Aircraft:
         target_vec = Vector2(self._target.x - self._position.x,
                              self._target.y - self._position.y)
         if abs(target_vec) <= self._v_abs / Params.Aircraft.ANGULAR_SPEED:
+            if self._need_correct_angle:
+                self._angle -= Params.Aircraft.CORRECT_ANGLE
+                self._need_correct_angle = False
             self.__flight_around(dt)
         else:
             self.__flight_to_target(self._target, dt)
 
-    def update(self, dt, ship_pos):
+    def update(self, dt, ship_pos, ship_angle):
         if self._model is None:
             # Wait some time for reloaded aircraft
             if self._reload_time is not None:
@@ -194,6 +196,9 @@ class Aircraft:
 
         # Increase the velocity to the maximum value
         if self._v_abs < Params.Aircraft.LINEAR_SPEED:
+            self._a = Vector2(math.cos(ship_angle), math.sin(ship_angle)) * abs(self._a)
+            self._v = Vector2(math.cos(ship_angle), math.sin(ship_angle)) * self._v_abs
+            self._angle = ship_angle
             self._v += self._a * dt
             self._v_abs = abs(self._v)
         # Increase the flight time to the maximum value
@@ -201,7 +206,7 @@ class Aircraft:
             self._flight_time += dt
             # If target init - the aircraft circles around the target
             if self._target is not None:
-                self.__flight_around_the_target(dt)
+                self.__flight_around_target(dt)
         else:
             # Return to the ship
             self.__flight_to_target(ship_pos, dt, True)
@@ -226,6 +231,7 @@ class Aircraft:
             return
 
         self._target = Vector2(x, y)
+        self._need_correct_angle = True
 
     def is_reloaded(self):
         return self._reload_time is not None and self._reload_time < Params.Aircraft.RELOAD_TIME
@@ -281,7 +287,7 @@ class Ship:
         framework.placeModel(self._model, self._position.x, self._position.y, self._angle)
 
         for aircraft in self._aircrafts:
-            aircraft.update(dt, self._position)
+            aircraft.update(dt, self._position, self._angle)
 
     def keyPressed(self, key):
         self._input[key] = True
