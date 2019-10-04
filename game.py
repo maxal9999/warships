@@ -213,6 +213,10 @@ class Aircraft:
             # Return to the ship
             self.__flight_to_target(ship_pos, dt, True)
 
+        # Aircraft return to the ship
+        if self._model is None:
+            return
+
         self._position += self._v * dt
         framework.placeModel(self._model, self._position.x, self._position.y, self._angle)
 
