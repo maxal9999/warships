@@ -20,6 +20,7 @@ class Params:
         LINEAR_SPEED = 0.5
         ANGULAR_SPEED = 0.5
         AIRCRAFT_COUNT = 5
+        WIDTH = 0.6
 
     class Aircraft:
         ANGULAR_SPEED = 2.5
@@ -50,6 +51,9 @@ class Vector2:
 
     def __add__(self, other):
         return Vector2(self.x + other.x, self.y + other.y)
+
+    def __sub__(self, other):
+        return Vector2(self.x - other.x, self.y - other.y)
 
     def __eq__(self, other):
         return self.x == other.x and self.y == other.y
@@ -100,6 +104,8 @@ class Aircraft:
         self._position = None
         # Time for refueling
         self._reload_time = None
+        # Start position
+        self._start_pos = None
         # Target for whirling in the air
         self._target = None
         # Velocity vector
@@ -124,6 +130,7 @@ class Aircraft:
         self._model = framework.createAircraftModel()
         self._need_correct_angle = None
         self._position = Vector2(position)
+        self._start_pos = Vector2(position)
         self._target = None
         self._reload_time = None
         self._v = Vector2(Params.Aircraft.LINEAR_SPEED_MIN * math.cos(angle),
@@ -134,7 +141,7 @@ class Aircraft:
         if self._model is None:
             return
 
-        self._reload_time = 0
+        self._reload_time = None
         framework.destroyModel(self._model)
         self._model = None
 
@@ -145,7 +152,9 @@ class Aircraft:
         :return:
         """
         self._angle += Params.Aircraft.ANGULAR_SPEED * dt
-        self._v = Vector2(math.cos(self._angle), math.sin(self._angle)) * self._v_abs
+        rotate_vec = Vector2(math.cos(self._angle), math.sin(self._angle))
+        self._v = rotate_vec * self._v_abs
+        self._a = rotate_vec * abs(self._a)
 
     def __flight_to_target(self, target, dt, is_deinit=None):
         """
@@ -155,8 +164,7 @@ class Aircraft:
         :param is_deinit: hide the aircraft from the map
         :return:
         """
-        target_vec = Vector2(target.x - self._position.x,
-                             target.y - self._position.y)
+        target_vec = target - self._position
         if is_deinit and target_vec.is_null():
             self.deinit()
             return
@@ -171,8 +179,7 @@ class Aircraft:
         :param dt: quantum of the time
         :return:
         """
-        target_vec = Vector2(self._target.x - self._position.x,
-                             self._target.y - self._position.y)
+        target_vec = self._target - self._position
         if abs(target_vec) <= self._v_abs / Params.Aircraft.ANGULAR_SPEED:
             if self._need_correct_angle:
                 self._angle -= Params.Aircraft.CORRECT_ANGLE
@@ -198,9 +205,14 @@ class Aircraft:
 
         # Increase the velocity to the maximum value
         if self._v_abs < Params.Aircraft.LINEAR_SPEED:
-            self._a = Vector2(math.cos(ship_angle), math.sin(ship_angle)) * abs(self._a)
-            self._v = Vector2(math.cos(ship_angle), math.sin(ship_angle)) * self._v_abs
-            self._angle = ship_angle
+            # When the aircraft accelerates through the ship
+            if abs(self._position - self._start_pos) < Params.Ship.WIDTH:
+                self._a = Vector2(math.cos(ship_angle), math.sin(ship_angle)) * abs(self._a)
+                self._v = Vector2(math.cos(ship_angle), math.sin(ship_angle)) * self._v_abs
+                self._angle = ship_angle
+            # When the aircraft accelerates and flight to target
+            elif self._target is not None:
+                self.__flight_around_target(dt)
             self._v += self._a * dt
             self._v_abs = abs(self._v)
         # Increase the flight time to the maximum value
