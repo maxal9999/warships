@@ -183,13 +183,29 @@ class Aircraft:
         :return:
         """
         target_vec = self._target - self._position
+        # When the distance to the target becomes approximately equal to two radius of rotation,
+        # it is necessary to adjust the course.
+        # The correction vector is a vector perpendicular to the vector to the target
+        # and equal in magnitude to the radius of rotation.
+        # Vector A - vector perpendicular
+        # Vector B - vector to the target
+        # System:
+        # Ax * Bx + Ay * By = 0
+        # Ax * Ax + Ay * Ay = R
+        # Decision:
+        # Ay = R / sqrt(1 + (By / Bx)^2)
+        # Ax = - Ay * (By / Bx)
         if abs(target_vec) <= 2 * self._rotation_radius:
             if self._need_correct_angle:
                 koef = target_vec.y / target_vec.x
                 ay = self._rotation_radius / math.sqrt(1 + koef ** 2)
                 ax = ay * koef
-                self._target.x += ax
-                self._target.y -= ay
+                if self._target.x > 0:
+                    self._target.x += ax
+                    self._target.y -= ay
+                elif self._target.x < 0:
+                    self._target.x -= ax
+                    self._target.y += ay
                 self._need_correct_angle = False
         if target_vec.is_null():
             self.__flight_around(dt)
