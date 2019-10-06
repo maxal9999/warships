@@ -104,6 +104,8 @@ class Aircraft:
         self._position = None
         # Time for refueling
         self._reload_time = None
+        # Aircraft rotation radius
+        self._rotation_radius = None
         # Start position
         self._start_pos = None
         # Target for whirling in the air
@@ -136,6 +138,7 @@ class Aircraft:
         self._v = Vector2(Params.Aircraft.LINEAR_SPEED_MIN * math.cos(angle),
                           Params.Aircraft.LINEAR_SPEED_MIN * math.sin(angle))
         self._v_abs = abs(self._v)
+        self._rotation_radius = self._v_abs / Params.Aircraft.ANGULAR_SPEED
 
     def deinit(self):
         if self._model is None:
@@ -180,10 +183,15 @@ class Aircraft:
         :return:
         """
         target_vec = self._target - self._position
-        if abs(target_vec) <= self._v_abs / Params.Aircraft.ANGULAR_SPEED:
+        if abs(target_vec) <= 2 * self._rotation_radius:
             if self._need_correct_angle:
-                self._angle -= Params.Aircraft.CORRECT_ANGLE
+                koef = target_vec.y / target_vec.x
+                ay = self._rotation_radius / math.sqrt(1 + koef ** 2)
+                ax = ay * koef
+                self._target.x += ax
+                self._target.y -= ay
                 self._need_correct_angle = False
+        if target_vec.is_null():
             self.__flight_around(dt)
         else:
             self.__flight_to_target(self._target, dt)
@@ -215,6 +223,7 @@ class Aircraft:
                 self.__flight_around_target(dt)
             self._v += self._a * dt
             self._v_abs = abs(self._v)
+            self._rotation_radius = self._v_abs / Params.Aircraft.ANGULAR_SPEED
         # Increase the flight time to the maximum value
         elif self._flight_time < Params.Aircraft.FLIGHT_TIME:
             self._flight_time += dt
