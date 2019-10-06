@@ -25,7 +25,7 @@ class Params:
     class Aircraft:
         ANGULAR_SPEED = 2.5
         CORRECT_ANGLE = 1.57
-        FLIGHT_TIME = 15.0
+        FLIGHT_TIME = 45.0
         LINEAR_SPEED = 2.0
         LINEAR_SPEED_MIN = 0.1
         LINEAR_ACCELERATION = 1
@@ -140,11 +140,11 @@ class Aircraft:
         self._v_abs = abs(self._v)
         self._rotation_radius = self._v_abs / Params.Aircraft.ANGULAR_SPEED
 
-    def deinit(self):
+    def deinit(self, is_restart):
         if self._model is None:
             return
 
-        self._reload_time = None
+        self._reload_time = None if is_restart else 0
         framework.destroyModel(self._model)
         self._model = None
 
@@ -169,7 +169,7 @@ class Aircraft:
         """
         target_vec = target - self._position
         if is_deinit and target_vec.is_null():
-            self.deinit()
+            self.deinit(False)
             return
 
         angle = target_vec.angle_between(self._v)
@@ -195,7 +195,7 @@ class Aircraft:
         # Decision:
         # Ay = R / sqrt(1 + (By / Bx)^2)
         # Ax = - Ay * (By / Bx)
-        if abs(target_vec) <= 2 * self._rotation_radius:
+        if abs(target_vec) <= self._rotation_radius:
             if self._need_correct_angle:
                 koef = target_vec.y / target_vec.x
                 ay = self._rotation_radius / math.sqrt(1 + koef ** 2)
@@ -310,7 +310,7 @@ class Ship:
         framework.destroyModel(self._model)
         self._model = None
         for aircraft in self._aircrafts:
-            aircraft.deinit()
+            aircraft.deinit(True)
 
     def update(self, dt):
         linearSpeed = 0.0
