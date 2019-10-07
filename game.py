@@ -219,14 +219,6 @@ class Aircraft:
                 self._reload_time += dt
             return
 
-        # If the aircraft flew over the edges of the screen,
-        # then we direct it in the opposite direction
-        if self._position.y > Params.WIN_HEIGHT or \
-                self._position.y < -Params.WIN_HEIGHT or \
-                self._position.x > Params.WIN_WIDTH or \
-                self._position.x < -Params.WIN_WIDTH:
-            self.__flight_to_target(self._position * (-1), dt)
-
         # Increase the velocity to the maximum value
         if self._v_abs < Params.Aircraft.LINEAR_SPEED:
             # When the aircraft accelerates through the ship
