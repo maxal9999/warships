@@ -200,10 +200,10 @@ class Aircraft:
                 koef = target_vec.y / target_vec.x
                 ay = self._rotation_radius / math.sqrt(1 + koef ** 2)
                 ax = ay * koef
-                if self._target.x >= 0:
+                if target_vec.x > 0:
                     self._target.x += ax
                     self._target.y -= ay
-                elif self._target.x < 0:
+                elif target_vec.x < 0:
                     self._target.x -= ax
                     self._target.y += ay
                 self._need_correct_angle = False
