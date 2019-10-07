@@ -290,14 +290,13 @@ class Ship:
         self._input = None
         self._aircrafts = [Aircraft() for i in range(Params.Ship.AIRCRAFT_COUNT)]
         # Target for whirling in the air
-        self._target = None
+        self._target = Vector2()
 
     def init(self):
         assert not self._model
         self._model = framework.createShipModel()
         self._position = Vector2()
         self._angle = 0.0
-        self._target = Vector2()
         self._input = {
             framework.Keys.FORWARD: False,
             framework.Keys.BACKWARD: False,
