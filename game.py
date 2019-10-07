@@ -115,7 +115,7 @@ class Aircraft:
         # Velocity module
         self._v_abs = None
 
-    def init(self, position, angle=None):
+    def init(self, position, target, angle=None):
         assert not self._model
         self._a = Vector2(Params.Aircraft.LINEAR_ACCELERATION * math.cos(angle),
                           Params.Aircraft.LINEAR_ACCELERATION * math.sin(angle))
@@ -130,10 +130,10 @@ class Aircraft:
         }
 
         self._model = framework.createAircraftModel()
-        self._need_correct_angle = None
+        self._need_correct_angle = True
         self._position = Vector2(position)
         self._start_pos = Vector2(position)
-        self._target = None
+        self._target = target
         self._reload_time = None
         self._v = Vector2(Params.Aircraft.LINEAR_SPEED_MIN * math.cos(angle),
                           Params.Aircraft.LINEAR_SPEED_MIN * math.sin(angle))
@@ -270,9 +270,6 @@ class Aircraft:
         return self._model is None
 
     def set_target(self, x, y):
-        if self.is_hidden():
-            return
-
         self._target = Vector2(x, y)
         self._need_correct_angle = True
 
@@ -292,12 +289,15 @@ class Ship:
         self._angle = 0.0
         self._input = None
         self._aircrafts = [Aircraft() for i in range(Params.Ship.AIRCRAFT_COUNT)]
+        # Target for whirling in the air
+        self._target = None
 
     def init(self):
         assert not self._model
         self._model = framework.createShipModel()
         self._position = Vector2()
         self._angle = 0.0
+        self._target = Vector2()
         self._input = {
             framework.Keys.FORWARD: False,
             framework.Keys.BACKWARD: False,
@@ -342,12 +342,13 @@ class Ship:
     def mouseClicked(self, x, y, isLeftButton):
         if isLeftButton:
             framework.placeGoalModel(x, y)
+            self._target = Vector2(x, y)
             for aircraft in self._aircrafts:
                 aircraft.set_target(x, y)
         else:
             for aircraft in self._aircrafts:
                 if aircraft.is_hidden() and not aircraft.is_reloaded():
-                    aircraft.init(self._position, self._angle)
+                    aircraft.init(self._position, self._target, self._angle)
                     break
 
 
