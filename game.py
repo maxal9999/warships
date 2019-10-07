@@ -133,7 +133,7 @@ class Aircraft:
         self._need_correct_angle = True
         self._position = Vector2(position)
         self._start_pos = Vector2(position)
-        self._target = target
+        self._target = Vector2(target)
         self._reload_time = None
         self._v = Vector2(Params.Aircraft.LINEAR_SPEED_MIN * math.cos(angle),
                           Params.Aircraft.LINEAR_SPEED_MIN * math.sin(angle))
