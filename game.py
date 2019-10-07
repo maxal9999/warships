@@ -196,7 +196,7 @@ class Aircraft:
         # Ay = R / sqrt(1 + (By / Bx)^2)
         # Ax = - Ay * (By / Bx)
         if abs(target_vec) <= self._rotation_radius:
-            if self._need_correct_angle:
+            if self._need_correct_angle and target_vec.x != 0:
                 koef = target_vec.y / target_vec.x
                 ay = self._rotation_radius / math.sqrt(1 + koef ** 2)
                 ax = ay * koef
